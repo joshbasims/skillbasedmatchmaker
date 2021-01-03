@@ -96,6 +96,7 @@ def get_targeted_KD_for_captains(dict_of_players=players, dict_of_captains=capta
 
 #
 def get_difference_from_average(combination):
+    """This returns the total difference from the average score for each team in the combination"""
     total_difference = 0
     new_kd = get_targeted_KD_for_captains()
     for captain, crew in combination.items():
