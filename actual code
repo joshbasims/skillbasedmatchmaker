@@ -1,0 +1,199 @@
+
+def dict_to_list(a_dict):
+    """returns a list of the keys from a dict"""
+    new_list = []
+    for key, value in a_dict.items():
+        new_list.append(key)
+    return new_list
+
+
+def make_combinations(list_of_names, numbers_in_team=2):
+    """Run through all the combinations for players in the list, returning a dict with combos and names"""
+    # see if you can adapt this to then make it take 3 names and combinations
+
+    potential_combos = {}
+
+    combined_list = list(combinations(list_of_names, 2))
+
+    for teams in combined_list:
+
+        crew_names = ""
+        combined_KD = 0
+
+        for i in range(numbers_in_team):
+            crew_names += teams[i]
+            combined_KD += players[teams[i]]
+            if i < numbers_in_team-1:
+                crew_names += " : "
+            new_crew = {
+                crew_names: round(combined_KD, 2)
+            }
+
+        potential_combos.update(new_crew)
+
+    return potential_combos
+
+
+def return_best_combo(list_of_captains):
+    """Given a list of remaining players, will return dict of best combo, starting from captain with Highest KD"""
+
+    best_players_for_captains = {}
+
+    # generate the probability from the initial list
+    list_to_generate_probability = dict_to_list(players)
+
+    # make a thing that return a dict from a random order of captains
+    new_captains = {}
+
+    for names in list_of_captains:
+        name_to_dict_element = {names: captainsKD[names]}
+        new_captains.update(name_to_dict_element)
+
+    for captain, needed_KD in new_captains.items():
+
+        closest_to_KD = needed_KD
+        closest_team = ""
+        names = {}
+        sorted_dict = make_combinations(list_to_generate_probability, 2)
+
+        for (key, value) in sorted_dict.items():
+
+            difference = abs(sorted_dict[key] - captainsKD[captain])
+
+            if difference < closest_to_KD:
+                closest_to_KD = difference
+                closest_team = key
+                names = {captain: key}
+
+        best_players_for_captains.update(names)
+
+        name_one = closest_team.split(' : ')[0]
+        name_two = closest_team.split(' : ')[1]
+
+        list_to_generate_probability.remove(name_one)
+        list_to_generate_probability.remove(name_two)
+
+    return best_players_for_captains
+
+
+def get_targeted_KD_for_captains(dict_of_players=players, dict_of_captains=captainsKD, numbers_in_team=NUMBER_IN_TEAM):
+    """Input a dict of players and captains, will return dict of the needed KD for captain to make up to average"""
+    total_KD = 0
+    total_players = 0
+    adjusted_KD = {}
+    for key, value in dict_of_players.items():
+        total_KD += value
+        total_players += 1
+    for key, value in dict_of_captains.items():
+        total_KD += value
+        total_players += 1
+    average_kd_for_team = total_KD / total_players * numbers_in_team
+    # print(average_kd_for_team)
+    for key, value in dict_of_captains.items():
+        lamda = {key : round(average_kd_for_team-value, 2)}
+        adjusted_KD.update(lamda)
+    return adjusted_KD
+
+#
+def get_difference_from_average(combination):
+    total_difference = 0
+    new_kd = get_targeted_KD_for_captains()
+    for captain, crew in combination.items():
+        captain_score = new_kd[captain]
+        players_score = all_potential_scores[crew]
+        total = round(captain_score - players_score, 2)
+        # print(f"{captain} with {crew}  are {total} from average")
+        total_difference += abs(total)
+    return total_difference
+
+def get_difference_from_teams(combination):
+    highest_KD = 0
+    lowest_KD = 10
+    for captain, crew in combination.items():
+        captain_score = captainsKD[captain]
+        players_score = all_potential_scores[crew]
+        total = round(captain_score + players_score, 2)
+        if total > highest_KD:
+            highest_KD = total
+        if total < lowest_KD:
+            lowest_KD = total
+        print(f"highest kd = {highest_KD} Lowest KD = {lowest_KD}, total {highest_KD-lowest_KD}")
+
+    return highest_KD - lowest_KD
+
+
+def absolute_actual_best_combo(list_of_captains, numbers_in_teams=NUMBER_IN_TEAM):
+
+    """Input list of all players (They must have a corresponding KD in a dict above) and return combo of captains to
+    crew.
+     It needs a dict called captains and captainsKD"""
+
+    # Generate all the permutations of teams, return list of Tuples
+    perm_list = list(permutations(list_of_captains))
+
+    # Changing the list of Tuples to a list of lists
+    permed_list = []
+    for i in perm_list:
+        permed_list.append(list(i))
+
+    best_combo = {}
+    best_distance = 4
+
+    for i in permed_list:
+
+        # find combo of captains and crew that get closest to the average kd of all the players
+        combo = return_best_combo(i)
+
+        # find how far that is from the average kd
+        distance_between_top_and_bottom = get_difference_from_teams(combo)
+        print(distance_between_top_and_bottom)
+        # print(distance_from_average)
+        # print(distance_between_top_and_bottom < best_distance)
+        if distance_between_top_and_bottom < best_distance:
+            best_distance = distance_between_top_and_bottom
+            best_combo = combo
+            print(best_combo)
+            print(best_distance)
+
+    print(best_combo)
+    for captain, crew in best_combo.items():
+        captain_score = captainsKD[captain]
+        players_score = all_potential_scores[crew]
+        total = round(captain_score + players_score, 2)
+        print(
+            f"Captain {captain} has KD: {captain_score}, and crew ({crew}) have KD: {players_score}, TotalKD: {total}")
+    print(f'Total difference from average KD: {round(get_difference_from_average(best_combo), 2)}')
+#
+
+def get_average(dict_of_players=players, dict_of_captains=captainsKD, numbers_in_team=NUMBER_IN_TEAM):
+    """Input a dict of players and captains, will return dict of the needed KD for captain to make up to average"""
+    total_KD = 0
+    total_players = 0
+    adjusted_KD = {}
+    for key, value in dict_of_players.items():
+        total_KD += value
+        total_players += 1
+    for key, value in dict_of_captains.items():
+        total_KD += value
+        total_players += 1
+    average_kd_for_team = total_KD / total_players * numbers_in_team
+    return average_kd_for_team
+
+print(round(get_average(), 2))
+list_of_player_names = dict_to_list(players)
+# # print(list_of_player_names)
+# # print(len(list_of_player_names))
+all_potential_scores = make_combinations(list_of_player_names)
+absolute_actual_best_combo(dict_to_list(captainsKD))
+#
+#
+# # TODO 1 make an input that asks for captains and their KDs, then crews and their KDs. Save the captains to a dict
+# #  called captains, and the crew to a dict called players
+#
+# # TODO 2 Work out what the average KD should be per TEAM, then save the value (TEAMKD - captain KD) to a dict with
+# #  key of the captains name
+#
+# # TODO 3 Ask how many people you want in a team, this should then be taken into account by function make_combination,
+# #  this should then make a key with the three possible combinations of names, with their combined KD
+#
+# # TODO 4 Pass the list of captains through the function absolute_actual_best_combo(), should return best combo
