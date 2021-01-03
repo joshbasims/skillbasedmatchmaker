@@ -1,0 +1,16 @@
+players = {
+    'rowan': 0.69,
+    'daniels': 1.09,
+    'somerville': 1.06,
+    'lawrence': 0.98,
+    'veeral': 0.95,
+    'luke': 0.88,
+    'jonny': 0.84,
+    'greets': 0.75,
+    'vince': 0.67,
+    'hayden': 0.67,
+    'sims': 0.60,
+    'leeks': 0.55,
+    'gopal': 0.54,
+    'rob': 0.39
+}
